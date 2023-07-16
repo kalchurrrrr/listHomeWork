@@ -1,43 +1,49 @@
 package com.list.listHomeWork;
 
 import org.springframework.stereotype.Service;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class EmployeeService {
-    private List<Employee> employees;
+    private Map<String, Employee> employeeMap;
     private final int maxEmployeesCount;
 
     public EmployeeService() {
-        employees = new ArrayList<>();
+        employeeMap = new HashMap<>();
         maxEmployeesCount = 10;
     }
 
     public void addEmployee(Employee employee) {
-        if (employees.size() >= maxEmployeesCount) {
+        if (employeeMap.size() >= maxEmployeesCount) {
             throw new EmployeeStorageIsFullException("Достигнуто максимальное количество сотрудников");
         }
 
-        if (employees.contains(employee)) {
+        String key = generateKey(employee);
+        if (employeeMap.containsKey(key)) {
             throw new EmployeeAlreadyAddedException("Сотрудник уже добавлен");
         }
 
-        employees.add(employee);
+        employeeMap.put(key, employee);
     }
 
     public void removeEmployee(Employee employee) {
-        if (!employees.remove(employee)) {
+        String key = generateKey(employee);
+        if (employeeMap.remove(key) == null) {
             throw new EmployeeNotFoundException("Сотрудник не найден");
         }
     }
 
     public Employee findEmployee(String firstName, String lastName) {
-        for (Employee employee : employees) {
-            if (employee.getFirstName().equals(firstName) && employee.getLastName().equals(lastName)) {
-                return employee;
-            }
-        }
-        throw new EmployeeNotFoundException("Сотрудник не найден");
+        String key = generateKey(firstName, lastName);
+        return employeeMap.get(key);
+    }
+
+    private String generateKey(Employee employee) {
+        return generateKey(employee.getFirstName(), employee.getLastName());
+    }
+
+    private String generateKey(String firstName, String lastName) {
+        return firstName.toLowerCase() + "_" + lastName.toLowerCase();
     }
 }
